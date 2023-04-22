@@ -39,7 +39,6 @@ class MainActivity : ComponentActivity() {
                 }
 
                 fun scanFailure() {
-                    val results = wifiManager.scanResults
                     val myIntent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
                     startActivity(myIntent)
                     scanSuccess()
@@ -122,7 +121,6 @@ fun findTheNearest(results: List<ScanResult>): String{
     //println(near)
     currentPoint = curNames[near.indexOf(near.min())]
     return currentPoint
-    println(currentPoint)
 }
 
 
