@@ -147,7 +147,7 @@ fun findTheWay(from: String, to: String): MutableList<String> {
 }
 
 fun diffStages(from: String, to: String){
-
+    return
 }
 
 
