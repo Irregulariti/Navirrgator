@@ -23,7 +23,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            findTheNearest(listOf())
+            findTheWay(findTheNearest(listOf()), "женский 1 этаж")
                 val wifiManager: WifiManager = getSystemService(WIFI_SERVICE) as WifiManager
                 fun scanSuccess() {
                     val results = if (ActivityCompat.checkSelfPermission(
@@ -89,14 +89,11 @@ fun DefaultPreview() {
 fun findTheNearest(results: List<ScanResult>): String{
     var currentPoint = ""
     val currentMap = mutableMapOf<String, Int>()
-    //currentMap = mapOf("SPBPU Public" to 78, "eduroam" to 84, "phygital" to 80, "test" to 82, "IBK Internal" to 78, "GUEST" to 78, "pres" to 78, "Galaxy M326BB7" to 77, "A500" to 83, "DIRECT-RgWorkCentre 3215" to 84, "HS_of_CS&C" to 85, "" to 87).toMutableMap()
     for (i in results) {
         currentMap[i.SSID] = i.level * (-1)
     }
     val levels = Valuable().levels
     val names = Valuable().names
-    //val levels = listOf(mapOf("SPBPU Public" to 78, "eduroam" to 84, "phygital" to 80, "test" to 82, "IBK Internal" to 78, "GUEST" to 78, "pres" to 78, "Galaxy M326BB7" to 77, "A500" to 83, "DIRECT-RgWorkCentre 3215" to 84, "HS_of_CS&C" to 85, "" to 87), mapOf("test" to 78, "phygital" to 78, "eduroam" to 78, "GUEST" to 74, "pres" to 84, "SPBPU Public" to 77, "IBK Internal" to 80, "?????" to 66, "A500" to 72, "Galaxy M326BB7" to 75, "digitek" to 75, "Tenda_3781D0_5G" to 86, "DDB_310" to 87))
-    //val names = listOf("правый конец 4 этажа", "левый конец 4 этажа")
     val searching = mutableMapOf<Int,Int>()
     for (i in levels.indices) {
         searching[i] = levels[i].keys.toSet().intersect(currentMap.keys.toSet()).size
@@ -120,7 +117,37 @@ fun findTheNearest(results: List<ScanResult>): String{
     }
     //println(near)
     currentPoint = curNames[near.indexOf(near.min())]
+    println(currentPoint)
     return currentPoint
+}
+
+fun findTheWay(from: String, to: String): MutableList<String> {
+    var temp = mutableListOf<MutableList<String>>()
+    for (i in Valuable().graph[from]!!){
+        temp.add(mutableListOf(i))
+    }
+    while (true){
+        val list = mutableListOf<MutableList<String>>()
+        for (i in temp.indices){
+            println(temp[i])
+            for (j in Valuable().graph[temp[i].last()]!!){
+                val inside = temp[i].toMutableList()
+                if (j != temp[i].last() && j !in inside) {
+                    inside.add(j)
+                    list.add(inside)
+                    if (to in inside){
+                        println(inside)
+                        return inside
+                    }
+                }
+            }
+        }
+        temp = list.toMutableList()
+    }
+}
+
+fun diffStages(from: String, to: String){
+
 }
 
 
