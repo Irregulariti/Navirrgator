@@ -45,7 +45,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-
             window.setFlags(
                 WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN
@@ -53,8 +52,8 @@ class MainActivity : ComponentActivity() {
 
             var ok = false
             var stage by remember { mutableStateOf(0) }
-            var point by remember { mutableStateOf("")}
-            var way by remember {mutableStateOf(mutableListOf<String>())}
+            var point by remember { mutableStateOf("") }
+            var way by remember { mutableStateOf(mutableListOf<String>()) }
 
             val wifiManager: WifiManager = getSystemService(WIFI_SERVICE) as WifiManager
             fun scanSuccess() {
@@ -67,7 +66,9 @@ class MainActivity : ComponentActivity() {
                 } else {
                     listOf()
                 }
-                stage = returnStage(findTheNearest(results)).also{ point = findTheNearest(results)} // current stage
+                stage = returnStage(findTheNearest(results)).also {
+                    point = findTheNearest(results)
+                } // current stage
             }
 
             fun scanFailure() { // permission menu
@@ -97,10 +98,41 @@ class MainActivity : ComponentActivity() {
             intentFilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)
             registerReceiver(wifiScanReceiver, intentFilter)
 
-            if (stage == 1){
-                val firstColumn = mapOf("100а" to 1f, "лестница" to 1f, "?1" to 1f, "кафе лесное" to 2f, "?2" to 1f, "104" to 1f, "выход" to 3f, "106" to 1f, "108" to 1f, "?3" to 1f, "110" to 1f, "110а" to 1f, "лестница" to 1f, "3" to 1f)
+            if (stage == 1) {
+                val firstColumn = mapOf(
+                    "100а" to 1f,
+                    "лестница1" to 1f,
+                    "?1" to 1f,
+                    "кафе лесное" to 2f,
+                    "?2" to 1f,
+                    "104" to 1f,
+                    "выход" to 3f,
+                    "106" to 1f,
+                    "108" to 1f,
+                    "?3" to 1f,
+                    "110" to 1f,
+                    "110а" to 1f,
+                    "3" to 1f
+                )
                 val secondColumn = mapOf("" to 13f, "chill" to 1f)
-                val thirdColumn = mapOf("100.1" to 1f, "женский" to 1f, "администрация" to 1f, "?1" to 0.5f, "101" to 1f, "?2" to 0.5f, "102" to 1f, "103" to 1f, "лифты 1 этаж" to 3f, "105" to 1f, "?3" to 1f, "107" to 1f, "111" to 1f, "?4" to 1f, "мужской" to 1f, "109" to 1f)
+                val thirdColumn = mapOf(
+                    "100.1" to 1f,
+                    "женский 1 этаж" to 1f,
+                    "администрация" to 1f,
+                    "?4" to 0.5f,
+                    "101" to 1f,
+                    "?5" to 0.5f,
+                    "102" to 1f,
+                    "103" to 1f,
+                    "лифты 1 этаж" to 3f,
+                    "105" to 1f,
+                    "?6" to 1f,
+                    "107" to 1f,
+                    "111" to 1f,
+                    "?7" to 1f,
+                    "мужской 1 этаж" to 1f,
+                    "109" to 1f
+                )
                 println(way)
                 Box(
                     modifier = Modifier
@@ -123,13 +155,19 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize().weight(1f)
                     ) {
                         for (i in 0..12) {
-                            val color = if (firstColumn.keys.toList()[i] !in way) { ButtonDefaults.buttonColors(backgroundColor = Color(0xA9FDFCFD))} else {ButtonDefaults.buttonColors(backgroundColor = Color(
-                                0xA9FC00FC
-                            )
-                            )}
+                            val color = if (firstColumn.keys.toList()[i] !in way) {
+                                ButtonDefaults.buttonColors(backgroundColor = Color(0xA9FDFCFD))
+                            } else {
+                                ButtonDefaults.buttonColors(
+                                    backgroundColor = Color(
+                                        0xA9FC00FC
+                                    )
+                                )
+                            }
                             Button(
-                                modifier = Modifier.weight(firstColumn.values.toList()[i]).fillMaxSize(),
-                                onClick = {way = findTheWay(point, firstColumn.keys.toList()[i])},
+                                modifier = Modifier.weight(firstColumn.values.toList()[i])
+                                    .fillMaxSize(),
+                                onClick = { way = findTheWay(point, firstColumn.keys.toList()[i]) },
                                 colors = color,
                                 border = BorderStroke(2.dp, Color(red = 0f, green = 0f, blue = 0f))
                             ) {
@@ -142,7 +180,8 @@ class MainActivity : ComponentActivity() {
                     ) {
                         for (i in 0..1) {
                             Box(
-                                modifier = Modifier.weight(secondColumn.values.toList()[i]).fillMaxSize(),
+                                modifier = Modifier.weight(secondColumn.values.toList()[i])
+                                    .fillMaxSize(),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Text(secondColumn.keys.toList()[i])
@@ -153,17 +192,30 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize().weight(1f)
                     ) {
                         for (i in 0..15) {
-                            val color = if (thirdColumn.keys.toList()[i] !in way) { ButtonDefaults.buttonColors(backgroundColor = Color(0xA9FDFCFD))} else {ButtonDefaults.buttonColors(backgroundColor = Color(
-                                0xA9FC00FC
-                            )
-                            )}
+                            val color = if (thirdColumn.keys.toList()[i] !in way) {
+                                ButtonDefaults.buttonColors(backgroundColor = Color(0xA9FDFCFD))
+                            } else {
+                                ButtonDefaults.buttonColors(
+                                    backgroundColor = Color(
+                                        0xA9FC00FC
+                                    )
+                                )
+                            }
                             Button(
-                                modifier = Modifier.weight(thirdColumn.values.toList()[i]).fillMaxSize(),
-                                onClick = {way = findTheWay(point, firstColumn.keys.toList()[i])},
+                                modifier = Modifier.weight(thirdColumn.values.toList()[i])
+                                    .fillMaxSize(),
+                                onClick = { way = findTheWay(point, thirdColumn.keys.toList()[i]) },
                                 colors = color,
-                                border = BorderStroke(2.7.dp, Color(red = 0f, green = 0f, blue = 0f))
+                                border = BorderStroke(
+                                    2.7.dp,
+                                    Color(red = 0f, green = 0f, blue = 0f)
+                                )
                             ) {
-                                Text(thirdColumn.keys.toList()[i],  modifier = Modifier, textAlign = TextAlign.Center)
+                                Text(
+                                    thirdColumn.keys.toList()[i],
+                                    modifier = Modifier,
+                                    textAlign = TextAlign.Center
+                                )
                             }
                         }
                     }
@@ -243,17 +295,19 @@ fun findTheWay(from: String, to: String): MutableList<String> {
                             ok = true
                             break
                         }
-                    }
-                    inside.add(j)
-                    list.add(inside)
-                    if (to in inside) {
-                        return inside
+                    } else {
+                        inside.add(j)
+                        list.add(inside)
+                        if (to in inside) {
+                            return inside
+                        }
                     }
                 }
             }
             if (ok) break
         }
         temp = list.toMutableList()
+        println(temp)
     }
 }
 
@@ -264,9 +318,9 @@ fun diffStages(from: String, to: String): Int {
 fun returnStage(point: String): Int{
     var stage = 0
     val ind = Valuable().graph.keys.indexOf(point)
-    if (ind <= 20) {
+    if (ind <= 29) {
         stage = 1
-    } else if (ind in 22..43) {
+    } else if (ind in 31..43) {
         stage = 2
     } else if (ind in 45..60) {
         stage = 3
