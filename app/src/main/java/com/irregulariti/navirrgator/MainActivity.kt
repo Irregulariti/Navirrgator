@@ -59,51 +59,82 @@ class MainActivity : ComponentActivity() {
 
             val coroutineScope = rememberCoroutineScope()
 
+            val wifiManager: WifiManager = getSystemService(WIFI_SERVICE) as WifiManager
+            fun scanSuccess() {
+                val results = if (ActivityCompat.checkSelfPermission(
+                        this,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    ) == PackageManager.PERMISSION_GRANTED
+                ) {
+                    wifiManager.scanResults
+                } else {
+                    listOf()
+                }
+                println(point)
+                point = findTheNearest(results)
+                // current stage
+            }
+
+            fun scanFailure() { // permission menu
+                scanSuccess()
+            }
+
+            val success = wifiManager.startScan()
+            if (!success) {
+                val myIntent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                startActivity(myIntent)
+                scanFailure()
+            }
+
+            val wifiScanReceiver = object : BroadcastReceiver() {
+
+                override fun onReceive(context: Context, intent: Intent) {
+                    val success =
+                        intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false)
+                    if (success) {
+                        scanSuccess()
+                    } else {
+                        scanFailure()
+                    }
+                }
+            }
+
+            val intentFilter = IntentFilter()
+            intentFilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)
+            registerReceiver(wifiScanReceiver, intentFilter)
+
+            fun scan(){
+                val wifiManager: WifiManager = getSystemService(WIFI_SERVICE) as WifiManager
+
+
+                val success = wifiManager.startScan()
+
+                if (!success) {
+                    scanFailure()
+                }
+
+                val wifiScanReceiver = object : BroadcastReceiver() {
+
+                    override fun onReceive(context: Context, intent: Intent) {
+                        val success =
+                            intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false)
+                        if (success) {
+                            scanSuccess()
+                        } else {
+                            scanFailure()
+                        }
+                    }
+                }
+
+                val intentFilter = IntentFilter()
+                intentFilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)
+                registerReceiver(wifiScanReceiver, intentFilter)
+            }
 
                 coroutineScope.launch(Dispatchers.IO) {
                     while (true) {
                         delay(3000L)
-                        val wifiManager: WifiManager = getSystemService(WIFI_SERVICE) as WifiManager
-                        fun scanSuccess() {
-                            val results = if (ActivityCompat.checkSelfPermission(
-                                    getApplicationContext(),
-                                    Manifest.permission.ACCESS_FINE_LOCATION
-                                ) == PackageManager.PERMISSION_GRANTED
-                            ) {
-                                wifiManager.scanResults
-                            } else {
-                                listOf()
-                            }
-                            point = findTheNearest(results)
-                             // current stage
-                        }
-
-                        fun scanFailure() { // permission menu
-                            scanSuccess()
-                        }
-
-                        val success = wifiManager.startScan()
-//                println(success)
-                        if (!success) {
-                            scanFailure()
-                        }
-
-                        val wifiScanReceiver = object : BroadcastReceiver() {
-
-                            override fun onReceive(context: Context, intent: Intent) {
-                                val success =
-                                    intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false)
-                                if (success) {
-                                    scanSuccess()
-                                } else {
-                                    scanFailure()
-                                }
-                            }
-                        }
-
-                        val intentFilter = IntentFilter()
-                        intentFilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)
-                        registerReceiver(wifiScanReceiver, intentFilter)
+                        scan()
                     }
                 }
             var stage by remember { mutableStateOf(returnStage(point)) }
