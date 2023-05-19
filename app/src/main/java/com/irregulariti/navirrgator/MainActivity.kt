@@ -38,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.math.absoluteValue
 
 @Suppress("DEPRECATION")
 class MainActivity : ComponentActivity() {
@@ -45,16 +46,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-
             window.setFlags(
                 WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN
             )
-
+            var tempStage = 0
             var ok = false
-            var stage by remember { mutableStateOf(0) }
-            var point by remember { mutableStateOf("")}
-            var way by remember {mutableStateOf(mutableListOf<String>())}
+            var point by remember { mutableStateOf("") }
+            var way by remember { mutableStateOf(mutableListOf<String>()) }
 
             val wifiManager: WifiManager = getSystemService(WIFI_SERVICE) as WifiManager
             fun scanSuccess() {
@@ -67,7 +66,9 @@ class MainActivity : ComponentActivity() {
                 } else {
                     listOf()
                 }
-                stage = returnStage(findTheNearest(results)).also{ point = findTheNearest(results)} // current stage
+                tempStage = returnStage(findTheNearest(results)).also {
+                    point = findTheNearest(results)
+                } // current stage
             }
 
             fun scanFailure() { // permission menu
@@ -96,12 +97,180 @@ class MainActivity : ComponentActivity() {
             val intentFilter = IntentFilter()
             intentFilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)
             registerReceiver(wifiScanReceiver, intentFilter)
+            var stage by remember { mutableStateOf(tempStage) }
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                Image(
+                    modifier = Modifier
+                        .size(100.dp)
+                        .align(Alignment.TopCenter)
+                        .padding(top = 5.dp),
+                    painter = painterResource(id = R.drawable.front_name),
+                    contentDescription = null
+                )
+                if (stage !=5) {
+                    Button(
+                        modifier = Modifier.align(Alignment.TopEnd)
+                            .padding(0.dp, 0.dp, 35.dp, 0.dp),
+                        onClick = { stage = stage + 1 },
+                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xA9FDFCFD))
+                    ) {
+                        Text("Up to ${stage + 1}")
+                    }
+                }
+                if (stage!=1) {
+                    Button(
+                        modifier = Modifier.align(Alignment.TopStart)
+                            .padding(35.dp, 0.dp, 0.dp, 0.dp),
+                        onClick = { stage = stage - 1 },
+                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xA9FDFCFD))
+                    ) {
+                        Text("Down to ${stage - 1}")
+                    }
+                }
+            }
 
-            if (stage == 1){
-                val firstColumn = mapOf("100а" to 1f, "лестница" to 1f, "?1" to 1f, "кафе лесное" to 2f, "?2" to 1f, "104" to 1f, "выход" to 3f, "106" to 1f, "108" to 1f, "?3" to 1f, "110" to 1f, "110а" to 1f, "лестница" to 1f, "3" to 1f)
+            if (stage == 1) {
+                val firstColumn = mapOf(
+                    "100а" to 1f,
+                    "лестница1" to 1f,
+                    "?1" to 1f,
+                    "кафе лесное" to 2f,
+                    "?2" to 1f,
+                    "104" to 1f,
+                    "выход" to 3f,
+                    "106" to 1f,
+                    "108" to 1f,
+                    "?3" to 1f,
+                    "110" to 1f,
+                    "110а" to 1f,
+                    "3" to 1f
+                )
                 val secondColumn = mapOf("" to 13f, "chill" to 1f)
-                val thirdColumn = mapOf("100.1" to 1f, "женский" to 1f, "администрация" to 1f, "?1" to 0.5f, "101" to 1f, "?2" to 0.5f, "102" to 1f, "103" to 1f, "лифты 1 этаж" to 3f, "105" to 1f, "?3" to 1f, "107" to 1f, "111" to 1f, "?4" to 1f, "мужской" to 1f, "109" to 1f)
-                println(way)
+                val thirdColumn = mapOf(
+                    "100.1" to 1f,
+                    "женский 1 этаж" to 1.2f,
+                    "администрация" to 1.2f,
+                    "?4" to 0.5f,
+                    "101" to 1f,
+                    "?5" to 0.5f,
+                    "102" to 1f,
+                    "103" to 1f,
+                    "лифты 1 этаж" to 3f,
+                    "105" to 1f,
+                    "?6" to 1f,
+                    "107" to 1f,
+                    "111" to 1f,
+                    "?7" to 1f,
+                    "мужской 1 этаж" to 1.2f,
+                    "109" to 1f
+                )
+                Row(
+                    modifier = Modifier.padding(top = 50.dp),
+                    Arrangement.Center
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxSize().weight(1f)
+                    ) {
+                        for (i in 0..12) {
+                            val color = if (firstColumn.keys.toList()[i] !in way) {
+                                ButtonDefaults.buttonColors(backgroundColor = Color(0xA9FDFCFD))
+                            } else {
+                                ButtonDefaults.buttonColors(
+                                    backgroundColor = Color(
+                                        0xA9FC00FC
+                                    )
+                                )
+                            }
+                            Button(
+                                modifier = Modifier.weight(firstColumn.values.toList()[i])
+                                    .fillMaxSize(),
+                                onClick = { way = findTheWay(point, firstColumn.keys.toList()[i]) },
+                                colors = color,
+                                border = BorderStroke(2.dp, Color(red = 0f, green = 0f, blue = 0f))
+                            ) {
+                                Text(firstColumn.keys.toList()[i])
+                            }
+                        }
+                    }
+                    Column(
+                        modifier = Modifier.fillMaxSize().weight(0.7f)
+                    ) {
+                        for (i in 0..1) {
+                            Box(
+                                modifier = Modifier.weight(secondColumn.values.toList()[i])
+                                    .fillMaxSize(),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(secondColumn.keys.toList()[i])
+                            }
+                        }
+                    }
+                    Column(
+                        modifier = Modifier.fillMaxSize().weight(1f)
+                    ) {
+                        for (i in 0..15) {
+                            val color = if (thirdColumn.keys.toList()[i] !in way) {
+                                ButtonDefaults.buttonColors(backgroundColor = Color(0xA9FDFCFD))
+                            } else {
+                                ButtonDefaults.buttonColors(
+                                    backgroundColor = Color(
+                                        0xA9FC00FC
+                                    )
+                                )
+                            }
+                            Button(
+                                modifier = Modifier.weight(thirdColumn.values.toList()[i])
+                                    .fillMaxSize(),
+                                onClick = { way = findTheWay(point, thirdColumn.keys.toList()[i]) },
+                                colors = color,
+                                border = BorderStroke(
+                                    2.7.dp,
+                                    Color(red = 0f, green = 0f, blue = 0f)
+                                )
+                            ) {
+                                Text(
+                                    thirdColumn.keys.toList()[i],
+                                    modifier = Modifier,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    }
+                }
+            } else if(stage == 2){
+                val firstColumn = mapOf(
+                    "201 и а" to 1f,
+                    "лестница2" to 1f,
+                    "200 админ" to 1f,
+                    "203 202" to 1f,
+                    "204 205" to 1f,
+                    "206" to 1f,
+                    "208" to 1.3f,
+                    "210" to 1.3f,
+                    "212" to 1f,
+                    "214" to 1f,
+                    "216" to 1f,
+                    "?9" to 1f,
+                    "218" to 1f
+                )
+                val secondColumn = mapOf("" to 14f, "215" to 1f)
+                val thirdColumn = mapOf(
+                    "201б" to 1f,
+                    "женский 2 этаж" to 1.2f,
+                    "203 202" to 1.2f,
+                    "204 205" to 1.2f,
+                    "207" to 1f,
+                    "209" to 1f,
+                    "лифты 2 этаж" to 3f,
+                    "211" to 1f,
+                    "217" to 1f,
+                    "213" to 1f,
+                    "мужской 2 этаж" to 1.2f,
+                    "215б" to 1f
+                )
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -116,20 +285,26 @@ class MainActivity : ComponentActivity() {
                     )
                 }
                 Row(
-                    modifier = Modifier.padding(top = 100.dp),
+                    modifier = Modifier.padding(top = 50.dp),
                     Arrangement.Center
                 ) {
                     Column(
                         modifier = Modifier.fillMaxSize().weight(1f)
                     ) {
                         for (i in 0..12) {
-                            val color = if (firstColumn.keys.toList()[i] !in way) { ButtonDefaults.buttonColors(backgroundColor = Color(0xA9FDFCFD))} else {ButtonDefaults.buttonColors(backgroundColor = Color(
-                                0xA9FC00FC
-                            )
-                            )}
+                            val color = if (firstColumn.keys.toList()[i] !in way) {
+                                ButtonDefaults.buttonColors(backgroundColor = Color(0xA9FDFCFD))
+                            } else {
+                                ButtonDefaults.buttonColors(
+                                    backgroundColor = Color(
+                                        0xA9FC00FC
+                                    )
+                                )
+                            }
                             Button(
-                                modifier = Modifier.weight(firstColumn.values.toList()[i]).fillMaxSize(),
-                                onClick = {way = findTheWay(point, firstColumn.keys.toList()[i])},
+                                modifier = Modifier.weight(firstColumn.values.toList()[i])
+                                    .fillMaxSize(),
+                                onClick = { way = findTheWay(point, firstColumn.keys.toList()[i]) },
                                 colors = color,
                                 border = BorderStroke(2.dp, Color(red = 0f, green = 0f, blue = 0f))
                             ) {
@@ -138,11 +313,12 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                     Column(
-                        modifier = Modifier.fillMaxSize().weight(1f)
+                        modifier = Modifier.fillMaxSize().weight(0.7f)
                     ) {
                         for (i in 0..1) {
                             Box(
-                                modifier = Modifier.weight(secondColumn.values.toList()[i]).fillMaxSize(),
+                                modifier = Modifier.weight(secondColumn.values.toList()[i])
+                                    .fillMaxSize(),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Text(secondColumn.keys.toList()[i])
@@ -152,18 +328,148 @@ class MainActivity : ComponentActivity() {
                     Column(
                         modifier = Modifier.fillMaxSize().weight(1f)
                     ) {
-                        for (i in 0..15) {
-                            val color = if (thirdColumn.keys.toList()[i] !in way) { ButtonDefaults.buttonColors(backgroundColor = Color(0xA9FDFCFD))} else {ButtonDefaults.buttonColors(backgroundColor = Color(
-                                0xA9FC00FC
-                            )
-                            )}
+                        for (i in 0..11) {
+                            val color = if (thirdColumn.keys.toList()[i] !in way) {
+                                ButtonDefaults.buttonColors(backgroundColor = Color(0xA9FDFCFD))
+                            } else {
+                                ButtonDefaults.buttonColors(
+                                    backgroundColor = Color(
+                                        0xA9FC00FC
+                                    )
+                                )
+                            }
                             Button(
-                                modifier = Modifier.weight(thirdColumn.values.toList()[i]).fillMaxSize(),
-                                onClick = {way = findTheWay(point, firstColumn.keys.toList()[i])},
+                                modifier = Modifier.weight(thirdColumn.values.toList()[i])
+                                    .fillMaxSize(),
+                                onClick = { way = findTheWay(point, thirdColumn.keys.toList()[i]) },
                                 colors = color,
-                                border = BorderStroke(2.7.dp, Color(red = 0f, green = 0f, blue = 0f))
+                                border = BorderStroke(
+                                    2.7.dp,
+                                    Color(red = 0f, green = 0f, blue = 0f)
+                                )
                             ) {
-                                Text(thirdColumn.keys.toList()[i],  modifier = Modifier, textAlign = TextAlign.Center)
+                                Text(
+                                    thirdColumn.keys.toList()[i],
+                                    modifier = Modifier,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    }
+                }
+            }else if(stage == 3){
+                val firstColumn = mapOf(
+                    "201 и а" to 1f,
+                    "лестница2" to 1f,
+                    "200 админ" to 1f,
+                    "203 202" to 1f,
+                    "204 205" to 1f,
+                    "206" to 1f,
+                    "208" to 1.3f,
+                    "210" to 1.3f,
+                    "212" to 1f,
+                    "214" to 1f,
+                    "216" to 1f,
+                    "?9" to 1f,
+                    "218" to 1f
+                )
+                val secondColumn = mapOf("" to 14f, "215" to 1f)
+                val thirdColumn = mapOf(
+                    "201б" to 1f,
+                    "женский 2 этаж" to 1.2f,
+                    "203 202" to 1.2f,
+                    "204 205" to 1.2f,
+                    "207" to 1f,
+                    "209" to 1f,
+                    "лифты 2 этаж" to 3f,
+                    "211" to 1f,
+                    "217" to 1f,
+                    "213" to 1f,
+                    "мужской 2 этаж" to 1.2f,
+                    "215б" to 1f
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                ) {
+                    Image(
+                        modifier = Modifier
+                            .size(100.dp)
+                            .align(Alignment.TopCenter)
+                            .padding(top = 5.dp),
+                        painter = painterResource(id = R.drawable.front_name),
+                        contentDescription = null
+                    )
+                }
+                Row(
+                    modifier = Modifier.padding(top = 50.dp),
+                    Arrangement.Center
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxSize().weight(1f)
+                    ) {
+                        for (i in 0..12) {
+                            val color = if (firstColumn.keys.toList()[i] !in way) {
+                                ButtonDefaults.buttonColors(backgroundColor = Color(0xA9FDFCFD))
+                            } else {
+                                ButtonDefaults.buttonColors(
+                                    backgroundColor = Color(
+                                        0xA9FC00FC
+                                    )
+                                )
+                            }
+                            Button(
+                                modifier = Modifier.weight(firstColumn.values.toList()[i])
+                                    .fillMaxSize(),
+                                onClick = { way = findTheWay(point, firstColumn.keys.toList()[i]) },
+                                colors = color,
+                                border = BorderStroke(2.dp, Color(red = 0f, green = 0f, blue = 0f))
+                            ) {
+                                Text(firstColumn.keys.toList()[i])
+                            }
+                        }
+                    }
+                    Column(
+                        modifier = Modifier.fillMaxSize().weight(0.7f)
+                    ) {
+                        for (i in 0..1) {
+                            Box(
+                                modifier = Modifier.weight(secondColumn.values.toList()[i])
+                                    .fillMaxSize(),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(secondColumn.keys.toList()[i])
+                            }
+                        }
+                    }
+                    Column(
+                        modifier = Modifier.fillMaxSize().weight(1f)
+                    ) {
+                        for (i in 0..11) {
+                            val color = if (thirdColumn.keys.toList()[i] !in way) {
+                                ButtonDefaults.buttonColors(backgroundColor = Color(0xA9FDFCFD))
+                            } else {
+                                ButtonDefaults.buttonColors(
+                                    backgroundColor = Color(
+                                        0xA9FC00FC
+                                    )
+                                )
+                            }
+                            Button(
+                                modifier = Modifier.weight(thirdColumn.values.toList()[i])
+                                    .fillMaxSize(),
+                                onClick = { way = findTheWay(point, thirdColumn.keys.toList()[i]) },
+                                colors = color,
+                                border = BorderStroke(
+                                    2.7.dp,
+                                    Color(red = 0f, green = 0f, blue = 0f)
+                                )
+                            ) {
+                                Text(
+                                    thirdColumn.keys.toList()[i],
+                                    modifier = Modifier,
+                                    textAlign = TextAlign.Center
+                                )
                             }
                         }
                     }
@@ -243,17 +549,19 @@ fun findTheWay(from: String, to: String): MutableList<String> {
                             ok = true
                             break
                         }
-                    }
-                    inside.add(j)
-                    list.add(inside)
-                    if (to in inside) {
-                        return inside
+                    } else {
+                        inside.add(j)
+                        list.add(inside)
+                        if (to in inside) {
+                            return inside
+                        }
                     }
                 }
             }
             if (ok) break
         }
         temp = list.toMutableList()
+        println(temp)
     }
 }
 
@@ -262,18 +570,18 @@ fun diffStages(from: String, to: String): Int {
 }
 
 fun returnStage(point: String): Int{
-    var stage = 0
+    var s = 0
     val ind = Valuable().graph.keys.indexOf(point)
-    if (ind <= 20) {
-        stage = 1
-    } else if (ind in 22..43) {
-        stage = 2
+    if (ind <= 29) {
+        s = 1
+    } else if (ind in 31..54) {
+        s = 2
     } else if (ind in 45..60) {
-        stage = 3
+        s = 3
     } else if (ind in 62..75) {
-        stage = 4
+        s = 4
     } else if (ind in 77..90) {
-        stage = 5
+        s = 5
     }
-    return stage
+    return s
 }
