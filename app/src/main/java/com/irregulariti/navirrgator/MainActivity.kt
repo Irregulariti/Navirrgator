@@ -1,6 +1,7 @@
 package com.irregulariti.navirrgator
 
 import android.Manifest
+import kotlinx.coroutines.*
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -38,11 +39,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.coroutines.coroutineContext
 import kotlin.math.absoluteValue
 
 @Suppress("DEPRECATION")
 class MainActivity : ComponentActivity() {
-    @SuppressLint("MutableCollectionMutableState")
+    @SuppressLint("MutableCollectionMutableState", "CoroutineCreationDuringComposition")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -52,52 +54,59 @@ class MainActivity : ComponentActivity() {
             )
             var tempStage = 0
             var ok = false
-            var point by remember { mutableStateOf("") }
+            var point by remember { mutableStateOf("вход") }
             var way by remember { mutableStateOf(mutableListOf<String>()) }
 
-            val wifiManager: WifiManager = getSystemService(WIFI_SERVICE) as WifiManager
-            fun scanSuccess() {
-                val results = if (ActivityCompat.checkSelfPermission(
-                        this,
-                        Manifest.permission.ACCESS_FINE_LOCATION
-                    ) == PackageManager.PERMISSION_GRANTED
-                ) {
-                    wifiManager.scanResults
-                } else {
-                    listOf()
-                }
-                tempStage = returnStage(findTheNearest(results)).also {
-                    point = findTheNearest(results)
-                } // current stage
-            }
+            val coroutineScope = rememberCoroutineScope()
 
-            fun scanFailure() { // permission menu
-                scanSuccess()
-            }
 
-            val success = wifiManager.startScan()
+                coroutineScope.launch(Dispatchers.IO) {
+                    while (true) {
+                        delay(3000L)
+                        val wifiManager: WifiManager = getSystemService(WIFI_SERVICE) as WifiManager
+                        fun scanSuccess() {
+                            val results = if (ActivityCompat.checkSelfPermission(
+                                    getApplicationContext(),
+                                    Manifest.permission.ACCESS_FINE_LOCATION
+                                ) == PackageManager.PERMISSION_GRANTED
+                            ) {
+                                wifiManager.scanResults
+                            } else {
+                                listOf()
+                            }
+                            point = findTheNearest(results)
+                             // current stage
+                        }
+
+                        fun scanFailure() { // permission menu
+                            scanSuccess()
+                        }
+
+                        val success = wifiManager.startScan()
 //                println(success)
-            if (!success) {
-                scanFailure()
-            }
+                        if (!success) {
+                            scanFailure()
+                        }
 
-            val wifiScanReceiver = object : BroadcastReceiver() {
+                        val wifiScanReceiver = object : BroadcastReceiver() {
 
-                override fun onReceive(context: Context, intent: Intent) {
-                    val success =
-                        intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false)
-                    if (success) {
-                        scanSuccess()
-                    } else {
-                        scanFailure()
+                            override fun onReceive(context: Context, intent: Intent) {
+                                val success =
+                                    intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false)
+                                if (success) {
+                                    scanSuccess()
+                                } else {
+                                    scanFailure()
+                                }
+                            }
+                        }
+
+                        val intentFilter = IntentFilter()
+                        intentFilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)
+                        registerReceiver(wifiScanReceiver, intentFilter)
                     }
                 }
-            }
-
-            val intentFilter = IntentFilter()
-            intentFilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)
-            registerReceiver(wifiScanReceiver, intentFilter)
-            var stage by remember { mutableStateOf(tempStage) }
+            var stage by remember { mutableStateOf(returnStage(point)) }
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -175,9 +184,12 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize().weight(1f)
                     ) {
                         for (i in 0..12) {
-                            val color = if (firstColumn.keys.toList()[i] !in way) {
+                            val color = if(firstColumn.keys.toList()[i] == point) {
+                                ButtonDefaults.buttonColors(backgroundColor = Color(0xA9E00808))
+                            } else if (firstColumn.keys.toList()[i] !in way) {
                                 ButtonDefaults.buttonColors(backgroundColor = Color(0xA9FDFCFD))
-                            } else {
+                            }
+                            else {
                                 ButtonDefaults.buttonColors(
                                     backgroundColor = Color(
                                         0xA9FC00FC
@@ -212,7 +224,9 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize().weight(1f)
                     ) {
                         for (i in 0..15) {
-                            val color = if (thirdColumn.keys.toList()[i] !in way) {
+                            val color = if(thirdColumn.keys.toList()[i] == point) {
+                                ButtonDefaults.buttonColors(backgroundColor = Color(0xA9E00808))
+                            } else if (thirdColumn.keys.toList()[i] !in way) {
                                 ButtonDefaults.buttonColors(backgroundColor = Color(0xA9FDFCFD))
                             } else {
                                 ButtonDefaults.buttonColors(
@@ -292,7 +306,9 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize().weight(1f)
                     ) {
                         for (i in 0..12) {
-                            val color = if (firstColumn.keys.toList()[i] !in way) {
+                            val color = if(firstColumn.keys.toList()[i] == point) {
+                                ButtonDefaults.buttonColors(backgroundColor = Color(0xA9E00808))
+                            }else if (firstColumn.keys.toList()[i] !in way) {
                                 ButtonDefaults.buttonColors(backgroundColor = Color(0xA9FDFCFD))
                             } else {
                                 ButtonDefaults.buttonColors(
@@ -329,7 +345,9 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize().weight(1f)
                     ) {
                         for (i in 0..11) {
-                            val color = if (thirdColumn.keys.toList()[i] !in way) {
+                            val color = if(thirdColumn.keys.toList()[i] == point) {
+                                ButtonDefaults.buttonColors(backgroundColor = Color(0xA9E00808))
+                            }else if (thirdColumn.keys.toList()[i] !in way) {
                                 ButtonDefaults.buttonColors(backgroundColor = Color(0xA9FDFCFD))
                             } else {
                                 ButtonDefaults.buttonColors(
@@ -401,7 +419,9 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize().weight(1f)
                     ) {
                         for (i in 0..7) {
-                            val color = if (firstColumn.keys.toList()[i] !in way) {
+                            val color = if(firstColumn.keys.toList()[i] == point) {
+                                ButtonDefaults.buttonColors(backgroundColor = Color(0xA9E00808))
+                            }else if (firstColumn.keys.toList()[i] !in way) {
                                 ButtonDefaults.buttonColors(backgroundColor = Color(0xA9FDFCFD))
                             } else {
                                 ButtonDefaults.buttonColors(
@@ -438,7 +458,9 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize().weight(1f)
                     ) {
                         for (i in 0..8) {
-                            val color = if (thirdColumn.keys.toList()[i] !in way) {
+                            val color = if(thirdColumn.keys.toList()[i] == point) {
+                                ButtonDefaults.buttonColors(backgroundColor = Color(0xA9E00808))
+                            }else if (thirdColumn.keys.toList()[i] !in way) {
                                 ButtonDefaults.buttonColors(backgroundColor = Color(0xA9FDFCFD))
                             } else {
                                 ButtonDefaults.buttonColors(
@@ -509,7 +531,9 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize().weight(1f)
                     ) {
                         for (i in 0..6) {
-                            val color = if (firstColumn.keys.toList()[i] !in way) {
+                            val color = if(firstColumn.keys.toList()[i] == point) {
+                                ButtonDefaults.buttonColors(backgroundColor = Color(0xA9E00808))
+                            }else if (firstColumn.keys.toList()[i] !in way) {
                                 ButtonDefaults.buttonColors(backgroundColor = Color(0xA9FDFCFD))
                             } else {
                                 ButtonDefaults.buttonColors(
@@ -546,7 +570,9 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize().weight(1f)
                     ) {
                         for (i in 0..8) {
-                            val color = if (thirdColumn.keys.toList()[i] !in way) {
+                            val color = if(thirdColumn.keys.toList()[i] == point) {
+                                ButtonDefaults.buttonColors(backgroundColor = Color(0xA9E00808))
+                            }else if (thirdColumn.keys.toList()[i] !in way) {
                                 ButtonDefaults.buttonColors(backgroundColor = Color(0xA9FDFCFD))
                             } else {
                                 ButtonDefaults.buttonColors(
@@ -617,7 +643,9 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize().weight(1f)
                     ) {
                         for (i in 0..6) {
-                            val color = if (firstColumn.keys.toList()[i] !in way) {
+                            val color = if(firstColumn.keys.toList()[i] == point) {
+                                ButtonDefaults.buttonColors(backgroundColor = Color(0xA9E00808))
+                            }else if (firstColumn.keys.toList()[i] !in way) {
                                 ButtonDefaults.buttonColors(backgroundColor = Color(0xA9FDFCFD))
                             } else {
                                 ButtonDefaults.buttonColors(
@@ -654,7 +682,9 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize().weight(1f)
                     ) {
                         for (i in 0..8) {
-                            val color = if (thirdColumn.keys.toList()[i] !in way) {
+                            val color = if(thirdColumn.keys.toList()[i] == point) {
+                                ButtonDefaults.buttonColors(backgroundColor = Color(0xA9E00808))
+                            }else if (thirdColumn.keys.toList()[i] !in way) {
                                 ButtonDefaults.buttonColors(backgroundColor = Color(0xA9FDFCFD))
                             } else {
                                 ButtonDefaults.buttonColors(
@@ -739,7 +769,7 @@ fun findTheNearest(results: List<ScanResult>): String {
 fun findTheWay(from: String, to: String): MutableList<String> {
     var diff = diffStages(from, to)
     var temp = mutableListOf<MutableList<String>>()
-    println(diff)
+    println(from)
     for (i in Valuable().graph[from]!!) {
         temp.add(mutableListOf(i))
     }
@@ -770,6 +800,7 @@ fun findTheWay(from: String, to: String): MutableList<String> {
             if (ok) break
         }
         temp = list.toMutableList()
+        println(temp)
     }
 }
 
@@ -780,7 +811,6 @@ fun diffStages(from: String, to: String): Int {
 fun returnStage(point: String): Int{
     var s = 0
     val ind = Valuable().graph.keys.indexOf(point)
-    println(ind)
     if (ind <= 29) {
         s = 1
     } else if (ind in 31..54) {
