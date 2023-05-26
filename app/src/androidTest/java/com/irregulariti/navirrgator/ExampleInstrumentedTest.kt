@@ -1,5 +1,6 @@
 package com.irregulariti.navirrgator
 
+import android.net.wifi.ScanResult
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
 
@@ -21,4 +22,21 @@ class ExampleInstrumentedTest {
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
         assertEquals("com.irregulariti.navirrgator", appContext.packageName)
     }
+
+    @Test
+    fun testStage(){
+        assertEquals(4,returnStage("404"))
+    }
+
+    @Test
+    fun testFindTheNearest(){
+        assertEquals("вход", findTheNearest(listOf<ScanResult>()))
+    }
+
+    @Test
+    fun testFindTheWay(){
+        assertEquals(listOf("выход", "лифты 1 этаж", "1 и 2", "лифты 2 этаж", "2 и 3", "лифты 3", "3 и 4", "лифты 4 этаж", "404"), findTheWay("вход", "404"))
+    }
+
+
 }

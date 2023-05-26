@@ -70,7 +70,6 @@ class MainActivity : ComponentActivity() {
                 } else {
                     listOf()
                 }
-                println(point)
                 point = findTheNearest(results)
                 // current stage
             }
@@ -98,6 +97,8 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+
+
 
             val intentFilter = IntentFilter()
             intentFilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)
